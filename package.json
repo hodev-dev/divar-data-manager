@@ -2,7 +2,7 @@
   "name": "divar",
   "productName": "divar",
   "description": "divar",
-  "main": "./build/electron.js",
+  "main": "./public/electron.js",
   "homepage": "./",
   "author": "Hosein Mola",
   "version": "0.1.0",
@@ -17,6 +17,7 @@
     "react": "^18.1.0",
     "react-data-grid": "^7.0.0-beta.13",
     "react-dom": "^18.1.0",
+    "react-icons": "^4.4.0",
     "react-notifications-component": "^4.0.1",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.0",
@@ -30,6 +31,7 @@
     "eject": "react-scripts eject",
     "dev": "concurrently -k \"npm start\" \"npm:electron\"",
     "electron": "wait-on tcp:3000 && electron .",
+    "etest": "electron .",
     "make": "electron-builder"
   },
   "eslintConfig": {
@@ -73,7 +75,16 @@
       "buildResources": "public"
     },
     "win": {
-      "target": "nsis"
+      "artifactName": "${productName} Setup ${version} ${arch}.${ext}",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "ia32",
+            "x64"
+          ]
+        }
+      ]
     }
   }
 }

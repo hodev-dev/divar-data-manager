@@ -10,7 +10,7 @@ export const Home = () => {
     const [inputPhone, setInputPhone] = useState('');
     const [inputToken, setInputToken] = useState('');
     const [inputCode, setInputCode] = useState('');
-    const [showTOTP, setShowTOPTP] = useState(false);
+    const [showTOTP, setShowTOPTP] = useState(true);
 
     useEffect(() => {
         if (localStorage.getItem('phonesConfig') !== null) {
@@ -43,6 +43,19 @@ export const Home = () => {
 
     const handleClipboard = (text) => {
         navigator.clipboard.writeText(text.toString()).then(() => {
+            Store.addNotification({
+                title: "عملیات موفق!",
+                message: "کپی شد",
+                type: "info",
+                insert: "top",
+                container: "top-right",
+                animationIn: ["animate__animated", "animate__fadeIn"],
+                animationOut: ["animate__animated", "animate__fadeOut"],
+                dismiss: {
+                    duration: 5000,
+                    onScreen: true
+                }
+            });
         });
     }
 
@@ -55,6 +68,19 @@ export const Home = () => {
     const handleReset = (index) => {
         phonesConfig[index].req = 0;
         localStorage.setItem('phonesConfig', JSON.stringify(phonesConfig));
+        Store.addNotification({
+            title: "عملیات موفق!",
+            message: "تعداد درخواست ها ریست شد",
+            type: "info",
+            insert: "top",
+            container: "top-right",
+            animationIn: ["animate__animated", "animate__fadeIn"],
+            animationOut: ["animate__animated", "animate__fadeOut"],
+            dismiss: {
+                duration: 5000,
+                onScreen: true
+            }
+        });
     }
 
     const handleTOPTP = async () => {
@@ -96,8 +122,8 @@ export const Home = () => {
                 }
             });
             if (test === false) {
-                const newPhones = [...phonesConfig, { number: inputPhone, token: token, req: 0 }];
-                setPhonesConfig(newPhones)
+                const newPhones = [...phonesConfig, { number: inputPhone, token: token, req: 0, time: '-' }];
+                setPhonesConfig(newPhones);
                 localStorage.setItem('phonesConfig', JSON.stringify(newPhones));
             } else {
                 Store.addNotification({
@@ -134,7 +160,7 @@ export const Home = () => {
     const renderToken = () => {
         return phonesConfig && phonesConfig.map((phoneConfig, index) => {
             return (
-                <div key={index} className='flex flex-col justify-center w-6/12 h-auto p-8 mt-5 shadow bg-zinc-800 no-drag'>
+                <div key={index} className='flex flex-col justify-center w-6/12 h-auto p-8 mt-2 shadow bg-zinc-800 no-drag'>
                     <details className='text-zinc-300 no-drag'>
                         <summary className='text-lg font-bold no-drag'>{phoneConfig.number}</summary>
                         <p className='break-words no-drag'>{phoneConfig.token}</p>
@@ -152,10 +178,10 @@ export const Home = () => {
     const renderTOTP = () => {
         if (showTOTP) {
             return (
-                <div className='flex flex-col justify-center w-6/12 h-auto p-8 mt-16 shadow bg-zinc-800 no-drag'>
+                <div className='flex flex-col justify-center w-6/12 h-auto p-8 mt-2 shadow bg-zinc-800 no-drag'>
                     <label className='text-right text-gray-500'>کد یکبار مصرف</label>
                     <input onChange={(e) => setInputCode(e.target.value)} value={inputCode} className=' font-mono text-center outline-none bg-zinc-900 text-white text-2xl  w-full min-h-[4rem] h-auto p-4 mt-4 text flex justify-start items-start no-drag' type={'text'} />
-                    <button onClick={confirmTOTP} className='flex items-center self-center justify-center w-48 h-16 mt-5 text-white bg-green-800 cursor-pointer text-bold no-drag'>تایید</button>
+                    <button onClick={confirmTOTP} className='flex items-center self-center justify-center w-48 h-16 mt-5 text-white bg-green-800 rounded-md cursor-pointer text-bold no-drag'>تایید</button>
                 </div>
             )
         }
@@ -163,33 +189,19 @@ export const Home = () => {
     }
 
     return (
-        // <div className='flex flex-col items-center justify-center w-full h-auto min-h-screen bg-zinc-900 drag '>
-        //     <div className='flex flex-col justify-center w-6/12 h-auto p-8 mt-16 shadow bg-zinc-800'>
-        //         <label className='text-right text-gray-500'>استخراح اطلاعات</label>
-        //         <Link className='flex items-center self-center justify-center w-48 h-16 mt-5 text-white bg-red-800 cursor-pointer text-bold no-drag' to={'posts'}>ورود</Link>
-        //     </div>
-        //     <div className='flex flex-col justify-center w-6/12 h-auto p-8 mt-5 shadow bg-zinc-800'>
-        //         <label className='text-right text-gray-500'>شماره موبایل</label>
-        //         <input onChange={(e) => setInputPhone(e.target.value)} value={inputPhone} className=' font-mono text-center outline-none bg-zinc-900 text-white text-2xl  w-full min-h-[4rem] h-auto p-4 mt-4 text flex justify-start items-start no-drag' type={'text'} />
-        //         <button className='text-right text-gray-500'>شماره موبایل</button>
-        //         <label className='mt-4 text-right text-gray-500'>توکن:</label>
-        //         <textarea onChange={(e) => setInputToken(e.target.value)} value={inputToken} className=' font-mono bg-zinc-900 text-white text-2xl  w-full min-h-[16rem] h-auto p-4 mt-4 text flex justify-start items-start no-drag' type={'text'} />
-        //         {/* <Link className='flex items-center self-center justify-center w-48 h-16 mt-5 text-white bg-green-800 cursor-pointer text-bold no-drag' to={'posts'}>افزودن</Link> */}
-        //         <button onClick={handleAddToken} className='flex items-center self-center justify-center w-48 h-16 mt-5 text-white bg-green-800 cursor-pointer text-bold no-drag' to={'posts'}>افزودن</button>
-        //     </div>
-        //     {renderToken()}
-        // </div>
-        <div className='flex flex-col items-center justify-center w-full h-auto min-h-screen bg-zinc-900 drag '>
-            <div className='flex flex-col justify-center w-6/12 h-auto p-8 mt-16 shadow bg-zinc-800'>
-                <Link className='flex items-center self-center justify-center w-48 h-16 mt-5 text-white bg-blue-800 cursor-pointer text-bold no-drag' to={'posts'}>ورود</Link>
+        <div className='w-full min-h-screen bg-zinc-900'>
+            <div className='w-full h-16 bg-zinc-800'>
+                <Link className='flex items-center self-center justify-center w-48 h-16 text-white cursor-pointer bg-rose-800 text-bold no-drag' to={'posts'}>ورود</Link>
             </div>
-            <div className='flex flex-col justify-center w-6/12 h-auto p-8 mt-16 shadow bg-zinc-800'>
-                <label className='text-right text-gray-500'>شماره موبایل</label>
-                <input onChange={(e) => setInputPhone(e.target.value)} value={inputPhone} className=' font-mono text-center outline-none bg-zinc-900 text-white text-2xl  w-full min-h-[4rem] h-auto p-4 mt-4 text flex justify-start items-start no-drag' type={'text'} />
-                <button onClick={handleTOPTP} className='flex items-center self-center justify-center w-48 h-16 mt-5 text-white bg-red-800 cursor-pointer text-bold no-drag'>دریافت کد یکبار مصرف</button>
+            <div className='flex flex-col items-center justify-center w-full h-auto min-h-screen bg-zinc-900 drag '>
+                <div className='flex flex-col justify-center w-6/12 h-auto p-8 mt-5 shadow bg-zinc-800'>
+                    <label className='text-right text-gray-500'>شماره موبایل</label>
+                    <input onChange={(e) => setInputPhone(e.target.value)} value={inputPhone} className=' font-mono text-center outline-none bg-zinc-900 text-white text-2xl  w-full min-h-[4rem] h-auto p-4 mt-4 text flex justify-start items-start no-drag' type={'text'} />
+                    <button onClick={handleTOPTP} className='flex items-center self-center justify-center w-48 h-16 mt-5 text-white bg-blue-700 rounded-md cursor-pointer text-bold no-drag'>دریافت کد یکبار مصرف</button>
+                </div>
+                {renderTOTP()}
+                {renderToken()}
             </div>
-            {renderTOTP()}
-            {renderToken()}
         </div>
     )
 }

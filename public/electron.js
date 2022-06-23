@@ -21,12 +21,14 @@ function createWindow() {
     });
 
     // and load the index.html of the app.
-    win.loadURL(url.format({
-        pathname: path.join(__dirname, 'index.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-    // win.loadURL('http://localhost:3000');
+    // win.loadFile("./index.html");
+    // win.loadURL(url.format({
+    //     pathname: path.join(__dirname, 'index.html'),
+    //     protocol: 'file:',
+    //     slashes: true
+    // }));
+
+    win.loadURL('http://localhost:3000');
     // Open the DevTools.
     // if (isDev) {
     //     win.webContents.openDevTools({ mode: 'detach' });

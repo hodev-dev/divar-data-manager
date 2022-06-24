@@ -1,0 +1,54 @@
+[
+    {
+        "domain": ".divar.ir",
+        "expirationDate": 1718884433.081291,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "city",
+        "path": "/",
+        "sameSite": null,
+        "secure": false,
+        "session": false,
+        "storeId": null,
+        "value": "ahvaz"
+    },
+    {
+        "domain": ".divar.ir",
+        "expirationDate": 1717336598.861112,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "did",
+        "path": "/",
+        "sameSite": null,
+        "secure": false,
+        "session": false,
+        "storeId": null,
+        "value": "7074c11e-d311-43ab-aaa9-071a69c39710"
+    },
+    {
+        "domain": ".divar.ir",
+        "expirationDate": 1718884433.081152,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "multi-city",
+        "path": "/",
+        "sameSite": null,
+        "secure": false,
+        "session": false,
+        "storeId": null,
+        "value": "hormozgan-province%7C"
+    },
+    {
+        "domain": ".divar.ir",
+        "expirationDate": 1719069582.444795,
+        "hostOnly": false,
+        "httpOnly": false,
+        "name": "token",
+        "path": "/",
+        "sameSite": null,
+        "secure": false,
+        "session": false,
+        "storeId": null,
+        "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiMDkwNTE0MjE4NTkiLCJpc3MiOiJhdXRoIiwiaWF0IjoxNjU1OTk3NTgzLCJleHAiOjE2NTcyOTM1ODMsInZlcmlmaWVkX3RpbWUiOjE2NTU5OTc1ODMsInVzZXItdHlwZSI6InBlcnNvbmFsIiwidXNlci10eXBlLWZhIjoiXHUwNjdlXHUwNjQ2XHUwNjQ0IFx1MDYzNFx1MDYyZVx1MDYzNVx1MDZjYyIsInNpZCI6Ijk2OTM3MDI0LWI4YmEtNDBmZi04NzE0LTdhYzkyYzk5M2MyOSJ9.DmjqWPcMPTNzzhGiItOxnV-E3EIc-lKiKfV51buFJUo"
+    }
+]

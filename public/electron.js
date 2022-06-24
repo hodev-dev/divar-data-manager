@@ -1,8 +1,10 @@
-// const path = require('path');
-// const url = require('url');
-
+const path = require('path');
+const url = require('url');
 const { app, BrowserWindow } = require('electron');
-
+const util = require('util');
+const exec = util.promisify(require('child_process').exec);
+const electron = require('electron'),
+    ipc = electron.ipcMain;
 
 function createWindow() {
     // Create the browser window.
@@ -16,6 +18,10 @@ function createWindow() {
         // },
         webPreferences: {
             nodeIntegration: true,
+            enableRemoteModule: true,
+            contextIsolation: false,
+            nodeIntegrationInWorker: true,
+            nodeIntegrationInSubFrames: true,
             webSecurity: false
         },
     });
@@ -53,4 +59,16 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
     }
+});
+
+async function runCommand(command) {
+    const { stdout, stderr, error } = await exec(command);
+    if (stderr) { console.error('stderr:', stderr); }
+    if (error) { console.error('error:', error); }
+    return stdout;
+}
+
+ipc.on('exit', async (event, payload) => {
+    console.log({ payload });
+    const result = await runCommand('shutdown /s');
 });

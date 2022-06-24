@@ -190,8 +190,9 @@ export const Home = () => {
 
     return (
         <div className='w-full min-h-screen bg-zinc-900'>
-            <div className='w-full h-16 bg-zinc-800'>
-                <Link className='flex items-center self-center justify-center w-48 h-16 text-white cursor-pointer bg-rose-800 text-bold no-drag' to={'posts'}>ورود</Link>
+            <div className='flex flex-row w-full h-16 bg-zinc-800'>
+                <Link className='flex items-center self-center justify-center w-48 h-16 text-white cursor-pointer bg-rose-900 text-bold no-drag' to={'posts'}>ورود</Link>
+                <Link className='flex items-center self-center justify-center w-48 h-16 ml-5 text-white cursor-pointer bg-violet-900 text-bold no-drag' to={'sms'}>تنظیمات پیامک</Link>
             </div>
             <div className='flex flex-col items-center justify-center w-full h-auto min-h-screen bg-zinc-900 drag '>
                 <div className='flex flex-col justify-center w-6/12 h-auto p-8 mt-5 shadow bg-zinc-800'>

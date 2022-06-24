@@ -5,14 +5,16 @@ import * as XLSX from 'xlsx/xlsx.mjs';
 import DataGrid from 'react-data-grid';
 import { Store } from 'react-notifications-component';
 import { FaSave, FaRegFileExcel, FaDatabase, FaCog, FaPlay } from 'react-icons/fa';
-
+import RenderContacts from './components/RenderContacts';
 import delayAdapterEnhancer from 'axios-delay';
+const { ipcRenderer } = window.require("electron");
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 const api = axios.create({
     adapter: delayAdapterEnhancer(axios.defaults.adapter)
 });
 
+var __phones;
 const Posts = () => {
     const [tokens, setTokens] = useState([]);
     const [selectedToken, setSelectedToken] = useState({});
@@ -27,6 +29,11 @@ const Posts = () => {
     const [endPage, setEndPage] = useState(7);
     const [delayState, setDelayState] = useState(20000);
     const [errors, setErrors] = useState([]);
+    const [name, setName] = useState('1');
+    const [from, setFrom] = useState('3000505');
+    const [toCollection, setToCollection] = useState([]);
+    const [isShutdown, setIsShutdown] = useState(true);
+    const [isSendSms, setIsSendSms] = useState(true);
 
     useEffect(() => {
         if (localStorage.getItem('phonesConfig') !== null) {
@@ -52,11 +59,28 @@ const Posts = () => {
         if (localStorage.getItem('url') !== null) {
             setUrl(localStorage.getItem('url'));
         }
+        if (localStorage.getItem('name') !== null) {
+            setName(localStorage.getItem('name'));
+        }
+        if (localStorage.getItem('from') !== null) {
+            setFrom(localStorage.getItem('from'));
+        }
+        if (localStorage.getItem('toCollection') !== null) {
+            setToCollection(JSON.parse(localStorage.getItem('toCollection')));
+        }
+        if (localStorage.getItem('isShutdown') !== null) {
+            setIsShutdown(JSON.parse(localStorage.getItem('isShutdown')));
+        }
+        if (localStorage.getItem('isSendSms') !== null) {
+            setIsSendSms(JSON.parse(localStorage.getItem('isSendSms')));
+        }
     }, []);
 
-    // useEffect(() => {
-    //     getTokenBaseOnRequest();
-    // }, [selectedToken]);
+    useEffect(() => {
+        if (phones.length !== 0) {
+            handleStore(phones);
+        }
+    }, [phones]);
 
     const makeFetchClass = () => {
         if (reqStatus === 1) {
@@ -71,6 +95,46 @@ const Posts = () => {
             return 'bg-red-900';
         }
     }
+
+    const handleTestSms = async () => {
+        if (toCollection.length > 0) {
+            for (let i = 0; i <= toCollection.length - 1; i++) {
+                try {
+                    console.log('sending sms to:', ' ', toCollection[i]);
+                    const res = await axios.get(`http://ippanel.com:8080/?apikey=vRMQht_M9Jnn6TqwXujXWBuSqZiSRj_FId8yzbJk9tg=&pid=jqrbj1u7bqs7n7v&fnum=${from}&tnum=${toCollection[i]}&p1=num&v1=${name}&p2=count&v2=${__phones.length}`);
+                    Store.addNotification({
+                        title: "Success!",
+                        message: toCollection[i].toString(),
+                        type: "success",
+                        insert: "top",
+                        container: "top-right",
+                        animationIn: ["animate__animated", "animate__fadeIn"],
+                        animationOut: ["animate__animated", "animate__fadeOut"],
+                        dismiss: {
+                            duration: 5000,
+                            onScreen: true
+                        }
+                    });
+                } catch (error) {
+                    console.log(error);
+                    Store.addNotification({
+                        title: "Error!",
+                        message: error.toString(),
+                        type: "danger",
+                        insert: "top",
+                        container: "top-right",
+                        animationIn: ["animate__animated", "animate__fadeIn"],
+                        animationOut: ["animate__animated", "animate__fadeOut"],
+                        dismiss: {
+                            duration: 5000,
+                            onScreen: true
+                        }
+                    });
+                }
+            }
+        }
+    };
+
     const handleFetch = async () => {
         let limit = endPage;
         setReqStatus(1);
@@ -125,7 +189,14 @@ const Posts = () => {
                 onScreen: true
             }
         });
+        if (isSendSms) {
+            await handleTestSms();
+        }
         setReqStatus(0);
+        if (isShutdown) {
+            handleShutdown();
+        }
+        setStatus(0);
     }
 
     const getTokenBaseOnRequest = () => {
@@ -138,7 +209,8 @@ const Posts = () => {
     const handlePhone = async (posts, currentPage) => {
         console.log({ posts });
         for (let i = 0; i <= posts.length - 1; i++) {
-            setReqStatus(2)
+            setReqStatus(2);
+            var temp;
             console.log(i, currentPage);
             const { title, token } = posts[i].data;
             console.log('requesting phone...', posts[i], i);
@@ -146,6 +218,7 @@ const Posts = () => {
                 const _availableToken = getTokenBaseOnRequest();
                 if (_availableToken !== undefined) {
                     console.log({ _availableToken });
+                    setSelectedToken(_availableToken);
                     const request = await api.get(`https://api.divar.ir/v5/posts/${token}/contact/`, {
                         headers: {
                             'Authorization': 'Bearer' + ' ' + _availableToken.token,
@@ -155,25 +228,26 @@ const Posts = () => {
                         // delay: ((index + 1) * (currentPage + 1)) * 10000,
                         credentials: 'same-origin',
                     });
-                    setPhones((prevPhones) => {
-                        const data = [...prevPhones, { contact: request.data.widgets.contact, page: currentPage, reqIndex: i, ...posts[i].data, ..._availableToken }];
-                        handleStore(data);
-                        return data;
-                    });
                     let updatedTokens = tokens.map((token) => {
                         if (Number(token.number) === Number(_availableToken.number)) {
                             token.req = token.req + 1;
                             token.time = new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds().toString();
+                            console.log('start wait');
                         }
                         return token;
                     });
-                    localStorage.setItem('phonesConfig', JSON.stringify(updatedTokens));
-                    const filter = updatedTokens.find((token) => token.number === selectedToken.number);
-                    setTokens([...updatedTokens]);
+                    console.log({ updatedTokens });
+                    const filter = updatedTokens.find((token) => token.number === _availableToken.number);
                     setReq(Number(filter.req));
                     setLastReqTime(new Date().getHours() + ":" + new Date().getMinutes() + ":" + new Date().getSeconds().toString());
+                    setPhones((prevPhones) => {
+                        const data = [...prevPhones, { contact: request.data.widgets.contact, page: currentPage, reqIndex: i, ...posts[i].data, ..._availableToken }];
+                        __phones = data;
+                        return data;
+                    });
+                    localStorage.setItem('phonesConfig', JSON.stringify(updatedTokens));
+                    setTokens([...updatedTokens]);
                     setStatus("SUCCESS");
-                    console.log('start wait');
                     await delay(delayState);
                 } else {
                     console.log('all phone has reached limit!');
@@ -212,19 +286,6 @@ const Posts = () => {
             } else {
                 localStorage.setItem('phones', JSON.stringify(phones));
             }
-            Store.addNotification({
-                title: "دخیره شد",
-                message: 'با موقیت ذخیره شد',
-                type: "success",
-                insert: "top-right",
-                container: "top-right",
-                animationIn: ["animate__animated", "animate__fadeIn"],
-                animationOut: ["animate__animated", "animate__fadeOut"],
-                dismiss: {
-                    duration: 5000,
-                    onScreen: true
-                }
-            });
         } catch (error) {
             Store.addNotification({
                 title: "خطا",
@@ -350,17 +411,35 @@ const Posts = () => {
         localStorage.setItem('reqLimit', e.target.value.toString());
     }
 
+    const handleIsShutdown = (e) => {
+        setIsShutdown((prevState) => !prevState);
+        localStorage.setItem('isShutdown', e.target.checked.toString());
+    }
+
+    const handleIsSendSms = (e) => {
+        setIsSendSms((prevState) => !prevState);
+        localStorage.setItem('isSendSms', e.target.checked.toString());
+    }
+
     const renderSelectToken = () => {
         const phonesConfigString = localStorage.getItem('phonesConfig');
         if (phonesConfigString !== null) {
             const phonesConfig = JSON.parse(phonesConfigString);
             return phonesConfig && phonesConfig.map((phoneConfig, index) => {
-                return (
-                    <option key={phoneConfig.number} className='min-h-[4rem] h-16 text-2xl  outline-none no-drag' value={index}>{phoneConfig.number}</option>
-                )
+                if (phoneConfig.number == selectedToken.number) {
+                    return (
+                        <option selected key={phoneConfig.number} className='min-h-[4rem] h-16 text-2xl  outline-none no-drag' value={index}>{phoneConfig.number}</option>
+                    )
+                } else {
+                    return (
+                        <option key={phoneConfig.number} className='min-h-[4rem] h-16 text-2xl  outline-none no-drag' value={index}>{phoneConfig.number}</option>
+                    )
+                }
             })
         }
     }
+
+
 
     const renderErrors = () => {
         return errors && errors.map((error, index) => {
@@ -375,38 +454,9 @@ const Posts = () => {
         })
     }
 
-    const renderContacts = () => {
-        if (status === 'EMPTY') {
-            return (
-                <div className='flex w-full h-16 text-white border border-zinc-700 ' dir='rtl'>
-                    <div className='flex items-center justify-center w-full p-4 text-white '>{'رکوردی وجود ندارد'}</div>
-                </div>
-            )
-        }
-        else if (status === 'SUCCESS') {
-            return phones && phones.sort((a, b) => parseFloat(a.page) - parseFloat(b.page)).map((phone, index) => {
-                return (
-                    <div key={index} className='flex items-center justify-center w-full min-h-[4rem] h-auto border divide-x-2 divide-zinc-800 border-zinc-800 border-zinc-900 hover:bg-red-900' dir='rtl'>
-                        <div className='flex flex-wrap items-center justify-center w-1/12 p-4 text-white'>{phone.page}</div>
-                        <div className='flex flex-wrap items-center justify-center w-1/12 p-4 text-white'>{phone.reqIndex}</div>
-                        <div className='flex flex-wrap items-center justify-center w-4/12 p-4 text-white'>{phone.title}</div>
-                        <div className='flex flex-wrap items-center justify-center w-4/12 p-4 text-white'>{phone.contact.phone}</div>
-                        <div className='flex flex-wrap items-center justify-center w-4/12 p-4 text-white'>{phone.category}</div>
-                        <div className='flex flex-wrap items-center justify-center w-4/12 p-4 text-white'>{phone.city}</div>
-                        <div className='flex flex-wrap items-center justify-center w-4/12 p-4 text-white'>{phone.district}</div>
-                        {/* <div className='flex flex-wrap items-center justify-center w-4/12 p-4 text-white'>{phone.topDescription}</div> */}
-                        <div className='flex flex-wrap items-center justify-center w-4/12 p-4 text-white'>{phone.number}</div>
-                        <div className='flex flex-wrap items-center justify-center w-4/12 p-4 text-white'>{phone.req}</div>
-                        <div className='flex flex-wrap items-center justify-center w-4/12 h-auto p-4 text-white break-words break-all'>{phone.token}</div>
-                    </div>
-                )
-            })
-        }
-        else {
-            return <div>error</div>
-        }
+    const handleShutdown = () => {
+        ipcRenderer.send('exit', true);
     }
-
 
     return (
         <div className='flex flex-col w-full min-h-screen bg-zinc-900 '>
@@ -446,8 +496,8 @@ const Posts = () => {
                     <span className='w-full ml-5'>وقفه</span>
                     <input onChange={handleDelayState} value={delayState} type={'text'} className='flex items-center justify-center h-12 pl-4 ml-5 text-center rounded-md outline-none w-w-4/12 text-zinc-200 bg-zinc-700 no-drag placeholder:text-center' />
                 </div>
-                <div className='flex items-center justify-center w-auto w-1/12 h-12 ml-5 text-white'>
-                    <span className='min-w-[12rem] ml-5 '>تعداد درخواست با هر شماره</span>
+                <div className='flex items-center justify-center w-auto w-2/12 h-12 ml-5 text-white'>
+                    <span className='min-w-[12rem] ml-10 '>تعداد درخواست با هر شماره</span>
                     <input onChange={handleLimit} value={reqLimit} type={'text'} className='flex items-center justify-center w-4/12 h-12 pl-4 ml-5 text-center rounded-md outline-none text-zinc-200 bg-zinc-700 no-drag placeholder:text-center' />
                 </div>
                 <div className='flex items-center justify-center w-auto h-12 ml-5 text-white 6/12'>
@@ -455,6 +505,14 @@ const Posts = () => {
                     <input onChange={handleStartPage} value={startPage} type={'text'} className='flex items-center justify-center w-3/12 h-12 pl-4 ml-5 text-center rounded-md outline-none text-zinc-200 bg-zinc-700 no-drag placeholder:text-center' />
                     <span className='ml-5'>پایان</span>
                     <input onChange={handleEndPage} value={endPage} type={'text'} className='flex items-center justify-center w-3/12 h-12 pl-4 ml-5 text-center rounded-md outline-none text-zinc-200 bg-zinc-700 no-drag placeholder:text-center' />
+                </div>
+                <div className='flex items-center justify-center w-auto w-3/12 h-12 ml-5 text-white'>
+                    <span className='min-w-[6rem] ml-5 '>خاموش شود</span>
+                    <input onChange={handleIsShutdown} checked={isShutdown} type={'checkbox'} className='w-6 h-6 accent-indigo-500' />
+                </div>
+                <div className='flex items-center justify-center w-auto w-3/12 h-12 ml-5 text-white'>
+                    <span className='min-w-[6rem] ml-5 '>ارسال پیامک</span>
+                    <input onChange={handleIsSendSms} checked={isSendSms} type={'checkbox'} className='w-6 h-6 accent-yellow-500' />
                 </div>
             </div>
             <div className='mt-2 no-drag bg-zinc-900'>
@@ -470,7 +528,7 @@ const Posts = () => {
                     <div className='flex items-center justify-center w-4/12 p-4 text-white'>تعداد درخواست</div>
                     <div className='flex items-center justify-center w-4/12 p-4 text-white'>توکن</div>
                 </div>
-                {renderContacts()}
+                <RenderContacts status={status} phones={phones} />
             </div>
             <h1 className='p-5 text-xl text-right text-white'>خطاها</h1>
             <div className='mt-2 no-drag bg-zinc-900'>
